@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SYSTEM_RECOVERY_v4.2</title>
+    <style>
+        :root { --glitch-col: #00ff41; --bg-col: #050505; }
+        body { background: var(--bg-col); color: var(--glitch-col); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; margin: 0; }
+        
+        #desktop { display: grid; grid-template-columns: 1fr 300px; height: 100vh; padding: 20px; gap: 20px; }
+        
+        /* Terminal Styling */
+        .window { border: 1px solid var(--glitch-col); background: rgba(0, 20, 0, 0.9); display: flex; flex-direction: column; box-shadow: 0 0 10px #003300; }
+        .title-bar { background: var(--glitch-col); color: black; padding: 2px 10px; font-weight: bold; font-size: 0.8rem; }
+        #terminal-body { flex-grow: 1; padding: 15px; overflow-y: auto; font-size: 0.9rem; }
+
+        /* Chat Styling */
+        #chat-window { height: 300px; }
+        #chat-history { flex-grow: 1; padding: 10px; font-size: 0.8rem; overflow-y: auto; color: #aaa; }
+        #chat-input { background: transparent; border: none; border-top: 1px solid var(--glitch-col); color: white; padding: 10px; outline: none; }
+
+        /* Glitch Effect */
+        .glitch-flash { animation: flash 0.1s step-end infinite; }
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; transform: skew(5deg); } }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="desktop">
+    <div class="window">
+        <div class="title-bar">COMMAND_PROMPT.EXE</div>
+        <div id="terminal-body">
+            <p>> Initializing system scan...</p>
+            <p>> Checking hardware status...</p>
+            <p id="sys-info">> Detected OS: <span id="user-os">Scanning...</span></p>
+            <p id="time-info">> Local Time: <span id="user-time">Checking clocks...</span></p>
+            <p>> ERROR: Unidentified process "EyeOnYou.pid" found.</p>
+            <p>> Type 'fix' to attempt removal.</p>
+            <div id="cmd-line">
+                <span>> </span><input type="text" id="terminal-input" autofocus style="background:transparent; border:none; color:inherit; outline:none; width:80%;">
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="chat-window">
+        <div class="title-bar">ENCRYPTED_CHAT</div>
+        <div id="chat-history"></div>
+        <input type="text" id="chat-input" placeholder="Say something...">
+    </div>
+</div>
+
+<script>
+    // 1. System Probe (Psychological Trick)
+    document.getElementById('user-os').innerText = navigator.platform;
+    setInterval(() => {
+        document.getElementById('user-time').innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // 2. The Possessed Chat
+    const chatInput = document.getElementById('chat-input');
+    const chatHistory = document.getElementById('chat-history');
+    const scaryMessages = [
+        "Why are you looking for me?",
+        "I like the light in your room.",
+        "Don't check the hallway.",
+        "Is it cold in there?",
+        "I am the code now."
+    ];
+
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const userMsg = chatInput.value;
+            chatHistory.innerHTML += `<div><span style="color:white">You:</span> ${userMsg}</div>`;
+            chatInput.value = '';
+            
+            // AI Response after a delay
+            setTimeout(() => {
+                const randomMsg = scaryMessages[Math.floor(Math.random() * scaryMessages.length)];
+                chatHistory.innerHTML += `<div><span style="color:red">SYS:</span> ${randomMsg}</div>`;
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+                
+                // Visual glitch trigger
+                if(Math.random() > 0.5) triggerGlitch();
+            }, 1000);
+        }
+    });
+
+    // 3. The Terminal Commands
+    const termInput = document.getElementById('terminal-input');
+    const termBody = document.getElementById('terminal-body');
+
+    termInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const cmd = termInput.value.toLowerCase();
+            termInput.value = '';
+            
+            if (cmd === 'fix') {
+                termBody.innerHTML += `<p>> Access Denied. "EyeOnYou.pid" is currently watching you.</p>`;
+            } else if (cmd === 'who') {
+                termBody.innerHTML += `<p>> I am the one you invited in when you clicked 'Open'.</p>`;
+            } else {
+                termBody.innerHTML += `<p>> Unknown command: ${cmd}</p>`;
+            }
+        }
+    });
+
+    function triggerGlitch() {
+        document.body.classList.add('glitch-flash');
+        setTimeout(() => document.body.classList.remove('glitch-flash'), 500);
+    }
+</script>
+</body>
+</html>
