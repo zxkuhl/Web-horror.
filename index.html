@@ -2,55 +2,83 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SYSTEM_COMPROMISED</title>
+    <title>THREAT_NEUTRALIZATION_OS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/clmtrackr@1.1.2/build/clmtrackr.min.js"></script>
     <style>
-        :root { --glitch-green: #00ff41; --danger-red: #ff0000; }
-        body { background: #050505; color: var(--glitch-green); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        :root { --bot-cyan: #00f2ff; --target-red: #ff3c3c; }
+        body { background: #020202; color: var(--bot-cyan); font-family: 'Share Tech Mono', monospace; margin: 0; overflow: hidden; }
         
-        #ui-layer { display: grid; grid-template-columns: 1fr 350px; height: 100vh; padding: 20px; gap: 20px; }
-        
-        /* Terminal & Chat styling */
-        .window { border: 1px solid var(--glitch-green); background: rgba(0, 10, 0, 0.85); display: flex; flex-direction: column; }
-        .title-bar { background: var(--glitch-green); color: black; padding: 4px 10px; font-size: 0.7rem; font-weight: bold; }
-        
-        /* The Camera/Bot Box */
-        #bot-view { position: relative; width: 100%; height: 250px; background: black; border-top: 2px solid var(--danger-red); overflow: hidden; }
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); /* Mirror view */ }
+        #main-ui { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 10px; }
 
-        #chat-history { flex-grow: 1; padding: 10px; font-size: 0.8rem; overflow-y: auto; height: 150px; }
-        #chat-input { background: transparent; border: none; border-top: 1px solid #333; color: white; padding: 10px; outline: none; }
+        /* Massive Camera Box */
+        #bot-view-large { 
+            position: relative; 
+            width: 800px; 
+            height: 500px; 
+            border: 2px solid #333;
+            background: #000;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        #canvas-container { transform: scaleX(-1); }
+
+        /* Robot HUD Overlay */
+        .hud-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            border: 20px solid transparent;
+            box-sizing: border-box;
+            background: linear-gradient(to bottom, rgba(0,242,255,0.05) 1px, transparent 1px);
+            background-size: 100% 4px;
+        }
+
+        .corner { position: absolute; width: 40px; height: 40px; border: 4px solid var(--bot-cyan); }
+        .top-l { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .top-r { top: 0; right: 0; border-left: none; border-bottom: none; }
+        .bot-l { bottom: 0; left: 0; border-right: none; border-top: none; }
+        .bot-r { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+        /* The Chat/Log underneath */
+        #terminal {
+            width: 800px;
+            height: 150px;
+            background: rgba(10, 10, 10, 0.9);
+            margin-top: 10px;
+            border: 1px solid #222;
+            padding: 10px;
+            font-size: 0.9rem;
+            overflow-y: hidden;
+        }
         
-        .status-text { color: var(--danger-red); font-size: 0.7rem; padding: 5px; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } }
+        .threat-level { color: var(--target-red); font-weight: bold; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-<div id="ui-layer">
-    <div class="window">
-        <div class="title-bar">LOG_VIEWER.EXE</div>
-        <div style="padding: 20px;">
-            <p>> [SYSTEM] Camera Feed hijacking successful...</p>
-            <p>> [SYSTEM] Face identified as: <span style="color:white">SUBJECT_01</span></p>
-            <p>> [SYSTEM] Don't blink.</p>
+<div id="main-ui">
+    <div style="width: 800px; display: flex; justify-content: space-between;">
+        <span>SYSTEM: ACTIVE</span>
+        <span class="threat-level">THREAT LEVEL: CALCULATING...</span>
+    </div>
+
+    <div id="bot-view-large">
+        <div id="canvas-container"></div>
+        <div class="hud-overlay">
+            <div class="corner top-l"></div><div class="corner top-r"></div>
+            <div class="corner bot-l"></div><div class="corner bot-r"></div>
+        </div>
+        <div style="position:absolute; top:30px; left:30px; font-size:12px;">
+            SCAN_MODE: BIOMETRIC_HARVEST<br>
+            PING: 14ms<br>
+            LENS: MK_IV_ROBOTIC_EYE
         </div>
     </div>
 
-    <div class="window">
-        <div class="title-bar">BOT_OBSERVER_V1</div>
-        <div id="chat-history">
-            <div style="color:gray">System: Waiting for biometric link...</div>
-        </div>
-        
-        <div id="bot-view">
-            <div id="canvas-container"></div>
-            <div style="position:absolute; bottom:5px; right:5px; color:red; font-size:10px;">REC ●</div>
-        </div>
-        
-        <div class="status-text">TARGET_LOCKED: TRACKING_FACE...</div>
-        <input type="text" id="chat-input" placeholder="TALK TO IT...">
+    <div id="terminal">
+        <div id="logs">> Connection established... <br>> Face Tracking software initialized...</div>
     </div>
 </div>
 
@@ -60,74 +88,75 @@
     let canvas;
 
     function setup() {
-        // Create canvas inside the bot-view container
         const container = document.getElementById('canvas-container');
-        canvas = createCanvas(350, 250);
+        canvas = createCanvas(800, 500);
         canvas.parent('canvas-container');
 
-        // Setup Webcam
         video = createCapture(VIDEO);
-        video.size(350, 250);
+        video.size(800, 500);
         video.hide();
 
-        // Setup Tracker
         tracker = new clm.tracker();
         tracker.init();
         tracker.start(video.elt);
     }
 
     function draw() {
-        // Draw the video frame to the canvas
+        // Subtle blue tint to the video
+        tint(0, 200, 255, 150); 
         image(video, 0, 0, width, height);
+        noTint();
         
-        // Get face positions
         let positions = tracker.getCurrentPosition();
 
         if (positions.length > 0) {
-            // Draw the "Lil Face Tracking Circle"
-            // positions[1] is left side, positions[13] is right side
-            // We'll use the nose (positions[62]) as the center
+            // Draw Robotic "Mesh"
+            stroke(0, 242, 255, 100);
+            strokeWeight(1);
+            beginShape(LINES);
+            for (let i = 0; i < positions.length; i++) {
+                vertex(positions[i][0], positions[i][1]);
+                if (i > 0) vertex(positions[i-1][0], positions[i-1][1]);
+            }
+            endShape();
+
+            // Main Targeting Reticle
             let nose = positions[62];
+            let boxSize = 200;
             
             noFill();
-            stroke(255, 0, 0); // Scary red circle
+            stroke(255, 60, 60);
             strokeWeight(2);
+            // Draw a square that tracks the face
+            rect(nose[0] - 100, nose[1] - 130, 200, 250);
             
-            // Draw the main tracking ring
-            ellipse(nose[0], nose[1], 120, 150);
-            
-            // Draw some "targeting" lines
-            line(nose[0] - 70, nose[1], nose[0] - 50, nose[1]);
-            line(nose[0] + 70, nose[1], nose[0] + 50, nose[1]);
-            
-            // Add a "Subject identified" label that follows the face
-            fill(255, 0, 0);
+            // "Scanning" Bar
+            let scanY = (frameCount % 100) * 2.5;
+            line(nose[0] - 100, (nose[1] - 130) + scanY, nose[0] + 100, (nose[1] - 130) + scanY);
+
+            // Data Text
+            fill(255, 60, 60);
             noStroke();
-            textSize(12);
-            text("ID: HUMAN_PREY", nose[0] - 50, nose[1] - 80);
+            text("TARGET: UNKNOWN_HUMAN", nose[0] + 110, nose[1] - 110);
+            text("PULSE: " + (70 + floor(random(10))) + " BPM", nose[0] + 110, nose[1] - 95);
+            text("FEAR_INDEX: 84%", nose[0] + 110, nose[1] - 80);
         }
     }
 
-    // Simple Chat Logic
-    const chatInput = document.getElementById('chat-input');
-    const history = document.getElementById('chat-history');
+    // Auto-updating logs for atmosphere
+    const logs = document.getElementById('logs');
+    const scenarios = [
+        "> Analysis: Subject is breathing faster.",
+        "> Warning: Subject is moving within the frame.",
+        "> Data: Retinal scan complete. Result: MORTAL.",
+        "> Protocol 9: Stay very still.",
+        "> System: Identifying nearest exit... Blocked."
+    ];
 
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            history.innerHTML += `<div>You: ${chatInput.value}</div>`;
-            const val = chatInput.value.toLowerCase();
-            chatInput.value = '';
-
-            setTimeout(() => {
-                let response = "I see you...";
-                if(val.includes("who")) response = "I am the ghost in the machine.";
-                if(val.includes("hello")) response = "We've been waiting for you.";
-                
-                history.innerHTML += `<div style="color:red">BOT: ${response}</div>`;
-                history.scrollTop = history.scrollHeight;
-            }, 800);
-        }
-    });
+    setInterval(() => {
+        let entry = scenarios[Math.floor(Math.random() * scenarios.length)];
+        logs.innerHTML = entry + "<br>" + logs.innerHTML;
+    }, 4000);
 </script>
 
 </body>
