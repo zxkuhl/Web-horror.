@@ -2,114 +2,133 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SYSTEM_RECOVERY_v4.2</title>
+    <title>SYSTEM_COMPROMISED</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clmtrackr@1.1.2/build/clmtrackr.min.js"></script>
     <style>
-        :root { --glitch-col: #00ff41; --bg-col: #050505; }
-        body { background: var(--bg-col); color: var(--glitch-col); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; margin: 0; }
+        :root { --glitch-green: #00ff41; --danger-red: #ff0000; }
+        body { background: #050505; color: var(--glitch-green); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
         
-        #desktop { display: grid; grid-template-columns: 1fr 300px; height: 100vh; padding: 20px; gap: 20px; }
+        #ui-layer { display: grid; grid-template-columns: 1fr 350px; height: 100vh; padding: 20px; gap: 20px; }
         
-        /* Terminal Styling */
-        .window { border: 1px solid var(--glitch-col); background: rgba(0, 20, 0, 0.9); display: flex; flex-direction: column; box-shadow: 0 0 10px #003300; }
-        .title-bar { background: var(--glitch-col); color: black; padding: 2px 10px; font-weight: bold; font-size: 0.8rem; }
-        #terminal-body { flex-grow: 1; padding: 15px; overflow-y: auto; font-size: 0.9rem; }
+        /* Terminal & Chat styling */
+        .window { border: 1px solid var(--glitch-green); background: rgba(0, 10, 0, 0.85); display: flex; flex-direction: column; }
+        .title-bar { background: var(--glitch-green); color: black; padding: 4px 10px; font-size: 0.7rem; font-weight: bold; }
+        
+        /* The Camera/Bot Box */
+        #bot-view { position: relative; width: 100%; height: 250px; background: black; border-top: 2px solid var(--danger-red); overflow: hidden; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); /* Mirror view */ }
 
-        /* Chat Styling */
-        #chat-window { height: 300px; }
-        #chat-history { flex-grow: 1; padding: 10px; font-size: 0.8rem; overflow-y: auto; color: #aaa; }
-        #chat-input { background: transparent; border: none; border-top: 1px solid var(--glitch-col); color: white; padding: 10px; outline: none; }
-
-        /* Glitch Effect */
-        .glitch-flash { animation: flash 0.1s step-end infinite; }
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; transform: skew(5deg); } }
+        #chat-history { flex-grow: 1; padding: 10px; font-size: 0.8rem; overflow-y: auto; height: 150px; }
+        #chat-input { background: transparent; border: none; border-top: 1px solid #333; color: white; padding: 10px; outline: none; }
         
-        .hidden { display: none; }
+        .status-text { color: var(--danger-red); font-size: 0.7rem; padding: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div id="desktop">
+<div id="ui-layer">
     <div class="window">
-        <div class="title-bar">COMMAND_PROMPT.EXE</div>
-        <div id="terminal-body">
-            <p>> Initializing system scan...</p>
-            <p>> Checking hardware status...</p>
-            <p id="sys-info">> Detected OS: <span id="user-os">Scanning...</span></p>
-            <p id="time-info">> Local Time: <span id="user-time">Checking clocks...</span></p>
-            <p>> ERROR: Unidentified process "EyeOnYou.pid" found.</p>
-            <p>> Type 'fix' to attempt removal.</p>
-            <div id="cmd-line">
-                <span>> </span><input type="text" id="terminal-input" autofocus style="background:transparent; border:none; color:inherit; outline:none; width:80%;">
-            </div>
+        <div class="title-bar">LOG_VIEWER.EXE</div>
+        <div style="padding: 20px;">
+            <p>> [SYSTEM] Camera Feed hijacking successful...</p>
+            <p>> [SYSTEM] Face identified as: <span style="color:white">SUBJECT_01</span></p>
+            <p>> [SYSTEM] Don't blink.</p>
         </div>
     </div>
 
-    <div class="window" id="chat-window">
-        <div class="title-bar">ENCRYPTED_CHAT</div>
-        <div id="chat-history"></div>
-        <input type="text" id="chat-input" placeholder="Say something...">
+    <div class="window">
+        <div class="title-bar">BOT_OBSERVER_V1</div>
+        <div id="chat-history">
+            <div style="color:gray">System: Waiting for biometric link...</div>
+        </div>
+        
+        <div id="bot-view">
+            <div id="canvas-container"></div>
+            <div style="position:absolute; bottom:5px; right:5px; color:red; font-size:10px;">REC ●</div>
+        </div>
+        
+        <div class="status-text">TARGET_LOCKED: TRACKING_FACE...</div>
+        <input type="text" id="chat-input" placeholder="TALK TO IT...">
     </div>
 </div>
 
 <script>
-    // 1. System Probe (Psychological Trick)
-    document.getElementById('user-os').innerText = navigator.platform;
-    setInterval(() => {
-        document.getElementById('user-time').innerText = new Date().toLocaleTimeString();
-    }, 1000);
+    let video;
+    let tracker;
+    let canvas;
 
-    // 2. The Possessed Chat
+    function setup() {
+        // Create canvas inside the bot-view container
+        const container = document.getElementById('canvas-container');
+        canvas = createCanvas(350, 250);
+        canvas.parent('canvas-container');
+
+        // Setup Webcam
+        video = createCapture(VIDEO);
+        video.size(350, 250);
+        video.hide();
+
+        // Setup Tracker
+        tracker = new clm.tracker();
+        tracker.init();
+        tracker.start(video.elt);
+    }
+
+    function draw() {
+        // Draw the video frame to the canvas
+        image(video, 0, 0, width, height);
+        
+        // Get face positions
+        let positions = tracker.getCurrentPosition();
+
+        if (positions.length > 0) {
+            // Draw the "Lil Face Tracking Circle"
+            // positions[1] is left side, positions[13] is right side
+            // We'll use the nose (positions[62]) as the center
+            let nose = positions[62];
+            
+            noFill();
+            stroke(255, 0, 0); // Scary red circle
+            strokeWeight(2);
+            
+            // Draw the main tracking ring
+            ellipse(nose[0], nose[1], 120, 150);
+            
+            // Draw some "targeting" lines
+            line(nose[0] - 70, nose[1], nose[0] - 50, nose[1]);
+            line(nose[0] + 70, nose[1], nose[0] + 50, nose[1]);
+            
+            // Add a "Subject identified" label that follows the face
+            fill(255, 0, 0);
+            noStroke();
+            textSize(12);
+            text("ID: HUMAN_PREY", nose[0] - 50, nose[1] - 80);
+        }
+    }
+
+    // Simple Chat Logic
     const chatInput = document.getElementById('chat-input');
-    const chatHistory = document.getElementById('chat-history');
-    const scaryMessages = [
-        "Why are you looking for me?",
-        "I like the light in your room.",
-        "Don't check the hallway.",
-        "Is it cold in there?",
-        "I am the code now."
-    ];
+    const history = document.getElementById('chat-history');
 
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            const userMsg = chatInput.value;
-            chatHistory.innerHTML += `<div><span style="color:white">You:</span> ${userMsg}</div>`;
+            history.innerHTML += `<div>You: ${chatInput.value}</div>`;
+            const val = chatInput.value.toLowerCase();
             chatInput.value = '';
-            
-            // AI Response after a delay
+
             setTimeout(() => {
-                const randomMsg = scaryMessages[Math.floor(Math.random() * scaryMessages.length)];
-                chatHistory.innerHTML += `<div><span style="color:red">SYS:</span> ${randomMsg}</div>`;
-                chatHistory.scrollTop = chatHistory.scrollHeight;
+                let response = "I see you...";
+                if(val.includes("who")) response = "I am the ghost in the machine.";
+                if(val.includes("hello")) response = "We've been waiting for you.";
                 
-                // Visual glitch trigger
-                if(Math.random() > 0.5) triggerGlitch();
-            }, 1000);
+                history.innerHTML += `<div style="color:red">BOT: ${response}</div>`;
+                history.scrollTop = history.scrollHeight;
+            }, 800);
         }
     });
-
-    // 3. The Terminal Commands
-    const termInput = document.getElementById('terminal-input');
-    const termBody = document.getElementById('terminal-body');
-
-    termInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const cmd = termInput.value.toLowerCase();
-            termInput.value = '';
-            
-            if (cmd === 'fix') {
-                termBody.innerHTML += `<p>> Access Denied. "EyeOnYou.pid" is currently watching you.</p>`;
-            } else if (cmd === 'who') {
-                termBody.innerHTML += `<p>> I am the one you invited in when you clicked 'Open'.</p>`;
-            } else {
-                termBody.innerHTML += `<p>> Unknown command: ${cmd}</p>`;
-            }
-        }
-    });
-
-    function triggerGlitch() {
-        document.body.classList.add('glitch-flash');
-        setTimeout(() => document.body.classList.remove('glitch-flash'), 500);
-    }
 </script>
+
 </body>
 </html>
