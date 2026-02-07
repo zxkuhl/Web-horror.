@@ -2,162 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>THREAT_NEUTRALIZATION_OS</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/clmtrackr@1.1.2/build/clmtrackr.min.js"></script>
+    <title>Escape the Animatronic</title>
     <style>
-        :root { --bot-cyan: #00f2ff; --target-red: #ff3c3c; }
-        body { background: #020202; color: var(--bot-cyan); font-family: 'Share Tech Mono', monospace; margin: 0; overflow: hidden; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        #game-container { position: relative; width: 800px; height: 600px; border: 5px solid #333; margin-top: 20px; background: #111; overflow: hidden; }
         
-        #main-ui { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 10px; }
+        /* Office View */
+        #office { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+        .static { background: url('https://media.giphy.com/media/oEI9uWUicKgH6/giphy.gif'); opacity: 0.1; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
-        /* Massive Camera Box */
-        #bot-view-large { 
-            position: relative; 
-            width: 800px; 
-            height: 500px; 
-            border: 2px solid #333;
-            background: #000;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
-            overflow: hidden;
-            margin-top: 20px;
-        }
+        /* UI Elements */
+        #ui { position: absolute; top: 10px; left: 10px; font-size: 20px; text-shadow: 2px 2px #000; }
+        #cam-display { display: none; width: 100%; height: 100%; background: #222; justify-content: center; align-items: center; font-size: 40px; }
 
-        #canvas-container { transform: scaleX(-1); }
+        /* Buttons */
+        .btn-panel { margin-top: 20px; }
+        button { padding: 10px 20px; background: #222; color: #0f0; border: 2px solid #0f0; cursor: pointer; font-family: 'Courier New'; }
+        button:hover { background: #0f0; color: #000; }
 
-        /* Robot HUD Overlay */
-        .hud-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            border: 20px solid transparent;
-            box-sizing: border-box;
-            background: linear-gradient(to bottom, rgba(0,242,255,0.05) 1px, transparent 1px);
-            background-size: 100% 4px;
-        }
-
-        .corner { position: absolute; width: 40px; height: 40px; border: 4px solid var(--bot-cyan); }
-        .top-l { top: 0; left: 0; border-right: none; border-bottom: none; }
-        .top-r { top: 0; right: 0; border-left: none; border-bottom: none; }
-        .bot-l { bottom: 0; left: 0; border-right: none; border-top: none; }
-        .bot-r { bottom: 0; right: 0; border-left: none; border-top: none; }
-
-        /* The Chat/Log underneath */
-        #terminal {
-            width: 800px;
-            height: 150px;
-            background: rgba(10, 10, 10, 0.9);
-            margin-top: 10px;
-            border: 1px solid #222;
-            padding: 10px;
-            font-size: 0.9rem;
-            overflow-y: hidden;
-        }
-        
-        .threat-level { color: var(--target-red); font-weight: bold; font-size: 1.2rem; }
+        /* Scares */
+        #jumpscare { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: red; color: white; justify-content: center; align-items: center; font-size: 100px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="main-ui">
-    <div style="width: 800px; display: flex; justify-content: space-between;">
-        <span>SYSTEM: ACTIVE</span>
-        <span class="threat-level">THREAT LEVEL: CALCULATING...</span>
-    </div>
+    <h1>OFFICE - CAM 01</h1>
 
-    <div id="bot-view-large">
-        <div id="canvas-container"></div>
-        <div class="hud-overlay">
-            <div class="corner top-l"></div><div class="corner top-r"></div>
-            <div class="corner bot-l"></div><div class="corner bot-r"></div>
-        </div>
-        <div style="position:absolute; top:30px; left:30px; font-size:12px;">
-            SCAN_MODE: BIOMETRIC_HARVEST<br>
-            PING: 14ms<br>
-            LENS: MK_IV_ROBOTIC_EYE
-        </div>
-    </div>
-
-    <div id="terminal">
-        <div id="logs">> Connection established... <br>> Face Tracking software initialized...</div>
-    </div>
-</div>
-
-<script>
-    let video;
-    let tracker;
-    let canvas;
-
-    function setup() {
-        const container = document.getElementById('canvas-container');
-        canvas = createCanvas(800, 500);
-        canvas.parent('canvas-container');
-
-        video = createCapture(VIDEO);
-        video.size(800, 500);
-        video.hide();
-
-        tracker = new clm.tracker();
-        tracker.init();
-        tracker.start(video.elt);
-    }
-
-    function draw() {
-        // Subtle blue tint to the video
-        tint(0, 200, 255, 150); 
-        image(video, 0, 0, width, height);
-        noTint();
+    <div id="game-container">
+        <div class="static"></div>
+        <div id="office">👁️ WATCHING THE HALLWAY...</div>
+        <div id="cam-display">CAM 02: SUPPLY CLOSET [EMPTY]</div>
+        <div id="jumpscare">IT'S ME.</div>
         
-        let positions = tracker.getCurrentPosition();
+        <div id="ui">
+            POWER: <span id="power">100</span>%<br>
+            TIME: <span id="time">12</span> AM
+        </div>
+    </div>
 
-        if (positions.length > 0) {
-            // Draw Robotic "Mesh"
-            stroke(0, 242, 255, 100);
-            strokeWeight(1);
-            beginShape(LINES);
-            for (let i = 0; i < positions.length; i++) {
-                vertex(positions[i][0], positions[i][1]);
-                if (i > 0) vertex(positions[i-1][0], positions[i-1][1]);
+    <div class="btn-panel">
+        <button onclick="toggleCams()">TOGGLE CAMERAS</button>
+        <button onclick="checkDoor()">SHUT DOOR</button>
+    </div>
+
+    <script>
+        let power = 100;
+        let time = 12;
+        let camOpen = false;
+        let animatronicPos = 0; // 0 is far, 3 is at the door
+
+        // Power Drain
+        setInterval(() => {
+            if(power > 0) {
+                power -= camOpen ? 2 : 1;
+                document.getElementById('power').innerText = power;
+            } else {
+                gameOver("POWER OUTAGE...");
             }
-            endShape();
+        }, 3000);
 
-            // Main Targeting Reticle
-            let nose = positions[62];
-            let boxSize = 200;
-            
-            noFill();
-            stroke(255, 60, 60);
-            strokeWeight(2);
-            // Draw a square that tracks the face
-            rect(nose[0] - 100, nose[1] - 130, 200, 250);
-            
-            // "Scanning" Bar
-            let scanY = (frameCount % 100) * 2.5;
-            line(nose[0] - 100, (nose[1] - 130) + scanY, nose[0] + 100, (nose[1] - 130) + scanY);
+        // Clock
+        setInterval(() => {
+            time++;
+            if(time > 6) time = 1; 
+            document.getElementById('time').innerText = time;
+            if(time == 6) alert("6 AM: YOU SURVIVED!");
+        }, 45000);
 
-            // Data Text
-            fill(255, 60, 60);
-            noStroke();
-            text("TARGET: UNKNOWN_HUMAN", nose[0] + 110, nose[1] - 110);
-            text("PULSE: " + (70 + floor(random(10))) + " BPM", nose[0] + 110, nose[1] - 95);
-            text("FEAR_INDEX: 84%", nose[0] + 110, nose[1] - 80);
+        function toggleCams() {
+            camOpen = !camOpen;
+            document.getElementById('cam-display').style.display = camOpen ? 'flex' : 'none';
+            document.getElementById('office').style.display = camOpen ? 'none' : 'flex';
+            
+            // Randomly move the monster when you check cams
+            if(camOpen) animatronicPos++;
+            if(animatronicPos >= 4) jumpscare();
         }
-    }
 
-    // Auto-updating logs for atmosphere
-    const logs = document.getElementById('logs');
-    const scenarios = [
-        "> Analysis: Subject is breathing faster.",
-        "> Warning: Subject is moving within the frame.",
-        "> Data: Retinal scan complete. Result: MORTAL.",
-        "> Protocol 9: Stay very still.",
-        "> System: Identifying nearest exit... Blocked."
-    ];
+        function checkDoor() {
+            if(animatronicPos === 3) {
+                alert("You heard a thud. It's gone for now.");
+                animatronicPos = 0;
+            } else {
+                alert("Nothing there...");
+            }
+        }
 
-    setInterval(() => {
-        let entry = scenarios[Math.floor(Math.random() * scenarios.length)];
-        logs.innerHTML = entry + "<br>" + logs.innerHTML;
-    }, 4000);
-</script>
+        function jumpscare() {
+            document.getElementById('jumpscare').style.display = 'flex';
+            setTimeout(() => { location.reload(); }, 2000);
+        }
 
+        function gameOver(msg) {
+            alert(msg);
+            location.reload();
+        }
+    </script>
 </body>
 </html>
